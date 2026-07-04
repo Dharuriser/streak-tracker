@@ -5,6 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1A1A1A">
 <title>筋トレ連続記録</title>
+<script>
+  // 一時的に別アプリが配信された際のService Workerとキャッシュを解除する。
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations
+        .filter((registration) => registration.scope.includes('/streak-tracker/'))
+        .forEach((registration) => registration.unregister());
+    });
+  }
+  if ('caches' in window) {
+    caches.keys().then((keys) => {
+      keys
+        .filter((key) => key.startsWith('skin-routine-'))
+        .forEach((key) => caches.delete(key));
+    });
+  }
+</script>
 <style>
   :root {
     --daruma-red: #D7000F;
