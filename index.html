@@ -1,187 +1,528 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#f6f2eb" />
-    <meta name="description" content="朝と夜の肌改善ルーティンを安全に続けるためのチェックアプリ" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="肌ルーティン" />
-    <link rel="manifest" href="./manifest.json" />
-    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="./icon-192.png" />
-    <link rel="stylesheet" href="./style.css" />
-    <title>肌ルーティン</title>
-  </head>
-  <body>
-    <div class="app-shell">
-      <header class="topbar">
-        <a class="brand" href="./" aria-label="肌ルーティン ホーム">
-          <span class="brand-mark" aria-hidden="true">○</span>
-          <span>肌ルーティン</span>
-        </a>
-        <button class="icon-button" id="settingsButton" type="button" aria-label="データ管理を開く">
-          <span aria-hidden="true">•••</span>
-        </button>
-      </header>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1A1A1A">
+<title>筋トレ連続記録</title>
+<style>
+  :root {
+    --daruma-red: #D7000F;
+    --kinpaku-gold: #C9A961;
+    --pure-white: #FFFFFF;
+    --sumi-black: #1A1A1A;
+    --ash: #2E2C2A;
+    --muted: #8A8580;
+  }
 
-      <main>
-        <section class="hero" aria-labelledby="todayTitle">
-          <p class="eyebrow" id="phaseLabel">1か月目</p>
-          <h1 id="todayTitle">
-            <span id="dateLabel">--月--日</span>
-            <span class="weekday" id="weekdayLabel">---</span>
-          </h1>
-          <div class="record-toolbar">
-            <label class="date-control" for="recordDate">
-              <span>記録日</span>
-              <input id="recordDate" type="date" />
-            </label>
-            <button class="return-button" id="returnToCurrentButton" type="button" hidden>現在に戻る</button>
-          </div>
-          <div class="history-edit-panel" id="historyEditPanel" hidden>
-            <span id="editModeLabel">過去の記録を補正中</span>
-            <div class="period-switch" role="group" aria-label="記録する時間帯">
-              <button id="morningPeriodButton" type="button" aria-pressed="true">朝</button>
-              <button id="nightPeriodButton" type="button" aria-pressed="false">夜</button>
-            </div>
-          </div>
-          <div class="period-row">
-            <span class="period-badge" id="periodBadge">朝</span>
-            <p id="periodDescription">今日のケアを読み込んでいます</p>
-          </div>
-        </section>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        <section class="stats-grid" aria-label="実行記録">
-          <article class="stat-card stat-card--wide">
-            <span class="stat-icon" aria-hidden="true">✓</span>
-            <div>
-              <strong id="totalCountValue">0回</strong>
-              <span>合計実行回数</span>
-            </div>
-          </article>
-          <article class="stat-card">
-            <strong id="weekCountValue">0回</strong>
-            <span>今週の実行数</span>
-          </article>
-          <article class="stat-card">
-            <strong id="monthCountValue">0回</strong>
-            <span>今月の実行数</span>
-          </article>
-        </section>
-        <div class="support-stats" aria-label="補助的な達成状況">
-          <span>直近の連続 <strong id="streakValue">0日</strong></span>
-          <span>朝 <strong id="morningRate">0%</strong></span>
-          <span>夜 <strong id="nightRate">0%</strong></span>
-        </div>
+  html, body {
+    height: 100%;
+    background: var(--sumi-black);
+    color: var(--pure-white);
+    font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", "Helvetica Neue", sans-serif;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
 
-        <section class="routine-card" aria-labelledby="routineTitle">
-          <div class="section-heading">
-            <div>
-              <p class="section-kicker" id="routineKicker">TODAY'S ROUTINE</p>
-              <h2 id="routineTitle">今日やること</h2>
-            </div>
-            <span class="progress-count" id="progressCount">0 / 0</span>
-          </div>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7vh 6vw 5vh;
+    min-height: 100vh;
+  }
 
-          <div class="safety-note" id="safetyNote" hidden>
-            <span aria-hidden="true">✦</span>
-            <p id="safetyText"></p>
-          </div>
-          <div class="routine-guidance">
-            <div class="caution-note" id="cautionNote" hidden>
-              <strong>今日の注意</strong>
-              <p id="cautionText"></p>
-            </div>
-            <div class="skip-note" id="skipNote">
-              <strong>今回は使わないもの</strong>
-              <p id="skipText"></p>
-            </div>
-          </div>
+  .top {
+    width: 100%;
+    text-align: center;
+  }
 
-          <ol class="routine-list" id="routineList" aria-live="polite"></ol>
+  .label {
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    font-weight: 500;
+  }
 
-          <div class="completion-actions">
-            <button class="primary-button" id="completeButton" type="button">
-              <span>やった</span>
-              <span aria-hidden="true">✓</span>
-            </button>
-            <span class="one-tap-hint" id="oneTapHint">押すと、すべての手順をまとめて記録します</span>
-            <button class="text-button danger-text" id="undoButton" type="button" hidden>完了を取り消す</button>
-          </div>
-        </section>
+  .streak-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    width: 100%;
+  }
 
-        <section class="next-card" id="nextCard" hidden aria-live="polite">
-          <div class="next-icon" aria-hidden="true">✓</div>
-          <div>
-            <p id="nextMessage">おつかれさまでした</p>
-            <h2 id="nextRoutineTitle">次は夜のルーティン</h2>
-            <span id="nextRoutineTime">16:00から</span>
-          </div>
-        </section>
+  .streak-number {
+    font-size: 30vw;
+    line-height: 0.9;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--pure-white);
+    transition: color 0.4s ease, transform 0.3s ease;
+    font-feature-settings: "tnum";
+  }
 
-        <section class="skin-card" aria-labelledby="skinTitle">
-          <div class="section-heading section-heading--compact">
-            <div>
-              <p class="section-kicker">SKIN NOTE</p>
-              <h2 id="skinTitle">いまの肌状態</h2>
-            </div>
-            <span class="save-status" id="skinSaveStatus" aria-live="polite">自動保存</span>
-          </div>
-          <p class="helper-text">当てはまるものを選ぶと、刺激のあるケアを自動調整します。</p>
-          <div class="skin-options" id="skinOptions"></div>
-          <label class="note-field" for="skinNote">
-            <span>メモ（任意）</span>
-            <textarea id="skinNote" rows="3" maxlength="500" placeholder="使った量、肌の変化など"></textarea>
-          </label>
-        </section>
+  .streak-number.lit {
+    color: var(--daruma-red);
+  }
 
-        <section class="history-card" aria-labelledby="historyTitle">
-          <div class="section-heading section-heading--compact">
-            <div>
-              <p class="section-kicker">RECENT</p>
-              <h2 id="historyTitle">最近の記録</h2>
-            </div>
-          </div>
-          <div class="history-list" id="historyList"></div>
-        </section>
+  .streak-unit {
+    font-size: 20px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-top: 4px;
+  }
 
-        <p class="medical-note">肌に強い痛み・腫れ・症状の悪化がある場合は使用を中止し、医療機関へ相談してください。</p>
-      </main>
+  .best {
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .best strong {
+    color: var(--kinpaku-gold);
+    font-weight: 700;
+  }
+
+  .action {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .check-btn {
+    width: 100%;
+    height: 76px;
+    border-radius: 999px;
+    border: none;
+    background: var(--daruma-red);
+    color: var(--pure-white);
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.12s ease, background 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: 0 8px 24px rgba(215, 0, 15, 0.35);
+  }
+
+  .check-btn:active {
+    transform: scale(0.97);
+  }
+
+  .check-btn.done {
+    background: var(--ash);
+    color: var(--kinpaku-gold);
+    box-shadow: none;
+  }
+
+  .check-icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  .undo-link {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    background: none;
+    border: none;
+    padding: 6px 12px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .undo-link.show {
+    opacity: 1;
+  }
+
+  .week-strip {
+    display: flex;
+    gap: 9px;
+    margin-top: 6px;
+  }
+
+  .day-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--ash);
+    border: 1px solid #3a3836;
+  }
+
+  .day-dot.filled {
+    background: var(--daruma-red);
+    border-color: var(--daruma-red);
+  }
+
+  .day-dot.today {
+    box-shadow: 0 0 0 2px var(--kinpaku-gold);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--kinpaku-gold);
+    color: var(--sumi-black);
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    transition: bottom 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+  }
+
+  .toast.show {
+    bottom: 24px;
+  }
+
+  .adjust-hint {
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--ash);
+    letter-spacing: 0.05em;
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    padding: 24px;
+  }
+
+  .modal-overlay.show {
+    display: flex;
+  }
+
+  .modal-box {
+    background: var(--ash);
+    border-radius: 20px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 340px;
+    text-align: center;
+  }
+
+  .modal-title {
+    font-size: 15px;
+    color: var(--pure-white);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .modal-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .modal-input {
+    width: 100%;
+    height: 56px;
+    border-radius: 14px;
+    border: none;
+    background: var(--sumi-black);
+    color: var(--kinpaku-gold);
+    font-size: 28px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+
+  .modal-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .modal-btn {
+    flex: 1;
+    height: 48px;
+    border-radius: 12px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .modal-btn.cancel {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid #3a3836;
+  }
+
+  .modal-btn.confirm {
+    background: var(--daruma-red);
+    color: var(--pure-white);
+  }
+</style>
+</head>
+<body>
+
+  <div class="top">
+    <div class="label">CONSECUTIVE TRAINING DAYS</div>
+  </div>
+
+  <div class="streak-wrap">
+    <div class="streak-number" id="streakNumber">0</div>
+    <div class="streak-unit">DAYS</div>
+    <div class="best" id="bestLabel">最長記録：<strong id="bestNumber">0</strong> 日</div>
+    <div class="week-strip" id="weekStrip"></div>
+    <div class="adjust-hint" id="adjustHint">数字を長押しで日数を直接設定</div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <div class="modal-title">連続日数を設定</div>
+      <div class="modal-sub">今日から遡って、すでに達成済みの日数を入力してください。<br>（今日を含む日数）</div>
+      <input type="number" inputmode="numeric" class="modal-input" id="modalInput" min="1" max="9999" value="1">
+      <div class="modal-row">
+        <button class="modal-btn cancel" id="modalCancel">キャンセル</button>
+        <button class="modal-btn confirm" id="modalConfirm">設定する</button>
+      </div>
     </div>
+  </div>
 
-    <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
-    <aside class="bottom-sheet" id="settingsSheet" aria-labelledby="settingsTitle" aria-hidden="true">
-      <div class="sheet-handle" aria-hidden="true"></div>
-      <div class="sheet-heading">
-        <div>
-          <p class="section-kicker">DATA</p>
-          <h2 id="settingsTitle">記録データの管理</h2>
-        </div>
-        <button class="icon-button" id="closeSettingsButton" type="button" aria-label="閉じる">×</button>
-      </div>
-      <p class="helper-text">記録はこの端末のブラウザ内だけに保存されます。機種変更前は書き出して保管してください。</p>
-      <div class="data-actions">
-        <button class="secondary-button" id="exportButton" type="button">
-          <span aria-hidden="true">↓</span>
-          <span>記録を書き出す</span>
-        </button>
-        <button class="secondary-button" id="importButton" type="button">
-          <span aria-hidden="true">↑</span>
-          <span>記録を読み込む</span>
-        </button>
-        <button class="secondary-button secondary-button--danger" id="resetButton" type="button">
-          <span aria-hidden="true">×</span>
-          <span>すべての記録をリセット</span>
-        </button>
-      </div>
-      <input id="importFile" type="file" accept="application/json,.json" hidden />
-      <p class="version-label">肌ルーティン v1.0 · サーバーへの送信なし</p>
-    </aside>
+  <div class="action">
+    <button class="check-btn" id="checkBtn">
+      <svg class="check-icon" viewBox="0 0 24 24" fill="none" id="checkIcon">
+        <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span id="btnLabel">今日やった</span>
+    </button>
+    <button class="undo-link" id="undoBtn">取り消す</button>
+  </div>
 
-    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <div class="toast" id="toast"></div>
 
-    <script src="./script.js" defer></script>
-  </body>
+<script>
+(function () {
+  const STORAGE_KEY = 'streak_tracker_v1';
+
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  function dateFromStr(s) {
+    const [y,m,d] = s.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+
+  function dayDiff(a, b) {
+    const msPerDay = 24*60*60*1000;
+    const da = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+    const db = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.round((db - da) / msPerDay);
+  }
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { dates: [], best: 0 };
+      const parsed = JSON.parse(raw);
+      return {
+        dates: Array.isArray(parsed.dates) ? parsed.dates : [],
+        best: typeof parsed.best === 'number' ? parsed.best : 0
+      };
+    } catch (e) {
+      return { dates: [], best: 0 };
+    }
+  }
+
+  function saveData(data) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  function calcStreak(dates) {
+    if (dates.length === 0) return 0;
+    const sorted = [...dates].sort();
+    const today = new Date();
+    const last = dateFromStr(sorted[sorted.length - 1]);
+    const gapFromToday = dayDiff(last, today);
+    // 連続が切れている（最後の記録が今日でも昨日でもない）
+    if (gapFromToday > 1) return 0;
+
+    let streak = 1;
+    for (let i = sorted.length - 1; i > 0; i--) {
+      const cur = dateFromStr(sorted[i]);
+      const prev = dateFromStr(sorted[i - 1]);
+      if (dayDiff(prev, cur) === 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  let data = loadData();
+
+  const streakNumberEl = document.getElementById('streakNumber');
+  const bestNumberEl = document.getElementById('bestNumber');
+  const checkBtn = document.getElementById('checkBtn');
+  const btnLabel = document.getElementById('btnLabel');
+  const checkIcon = document.getElementById('checkIcon');
+  const undoBtn = document.getElementById('undoBtn');
+  const weekStrip = document.getElementById('weekStrip');
+  const toast = document.getElementById('toast');
+
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1600);
+  }
+
+  function renderWeekStrip() {
+    weekStrip.innerHTML = '';
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      const dot = document.createElement('div');
+      dot.className = 'day-dot';
+      if (data.dates.includes(ds)) dot.classList.add('filled');
+      if (i === 0) dot.classList.add('today');
+      weekStrip.appendChild(dot);
+    }
+  }
+
+  function render() {
+    const streak = calcStreak(data.dates);
+    const doneToday = data.dates.includes(todayStr());
+
+    streakNumberEl.textContent = streak;
+    streakNumberEl.classList.toggle('lit', streak > 0);
+    bestNumberEl.textContent = data.best;
+
+    if (doneToday) {
+      checkBtn.classList.add('done');
+      btnLabel.textContent = '今日は完了';
+      checkIcon.querySelector('path').setAttribute('stroke-width', '3');
+      undoBtn.classList.add('show');
+    } else {
+      checkBtn.classList.remove('done');
+      btnLabel.textContent = '今日やった';
+      undoBtn.classList.remove('show');
+    }
+
+    renderWeekStrip();
+  }
+
+  // 長押しで日数を直接設定するモーダル
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalInput = document.getElementById('modalInput');
+  const modalCancel = document.getElementById('modalCancel');
+  const modalConfirm = document.getElementById('modalConfirm');
+
+  let pressTimer = null;
+
+  function openModal() {
+    const currentStreak = calcStreak(data.dates);
+    modalInput.value = currentStreak > 0 ? currentStreak : 1;
+    modalOverlay.classList.add('show');
+  }
+
+  function closeModal() {
+    modalOverlay.classList.remove('show');
+  }
+
+  function setStreakManually(n) {
+    n = Math.max(1, Math.min(9999, Math.round(n)));
+    const today = new Date();
+    const arr = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      arr.push(ds);
+    }
+    data.dates = arr;
+    if (n > data.best) data.best = n;
+    saveData(data);
+    render();
+    showToast(n + '日に設定しました');
+  }
+
+  streakNumberEl.addEventListener('touchstart', (e) => {
+    pressTimer = setTimeout(() => {
+      openModal();
+    }, 600);
+  });
+  streakNumberEl.addEventListener('touchend', () => {
+    if (pressTimer) clearTimeout(pressTimer);
+  });
+  streakNumberEl.addEventListener('touchmove', () => {
+    if (pressTimer) clearTimeout(pressTimer);
+  });
+  // PC等のフォールバック
+  streakNumberEl.addEventListener('mousedown', () => {
+    pressTimer = setTimeout(() => { openModal(); }, 600);
+  });
+  streakNumberEl.addEventListener('mouseup', () => {
+    if (pressTimer) clearTimeout(pressTimer);
+  });
+
+  modalCancel.addEventListener('click', closeModal);
+  modalConfirm.addEventListener('click', () => {
+    const val = parseInt(modalInput.value, 10);
+    if (!isNaN(val) && val > 0) {
+      setStreakManually(val);
+      closeModal();
+    }
+  });
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
+
+  checkBtn.addEventListener('click', () => {
+    const t = todayStr();
+    if (data.dates.includes(t)) return;
+    data.dates.push(t);
+    const newStreak = calcStreak(data.dates);
+    if (newStreak > data.best) data.best = newStreak;
+    saveData(data);
+    render();
+
+    if (newStreak > 1 && newStreak % 7 === 0) {
+      showToast(newStreak + '日連続！絶好調');
+    } else {
+      showToast('記録しました');
+    }
+  });
+
+  undoBtn.addEventListener('click', () => {
+    const t = todayStr();
+    data.dates = data.dates.filter(d => d !== t);
+    saveData(data);
+    render();
+    showToast('取り消しました');
+  });
+
+  render();
+})();
+</script>
+
+</body>
 </html>
